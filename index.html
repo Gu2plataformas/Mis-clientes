@@ -29,7 +29,18 @@
         .search-box input { background: #0f172a; border-color: #38bdf8; }
         
         ul { list-style: none; }
-        .client-card { background: #334155; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; position: relative; }
+        .client-card { background: #334155; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; position: relative; border-left: 6px solid #94a3b8; }
+        
+        /* Colores de estado */
+        .status-active { border-left-color: #22c55e !important; }
+        .status-warning { border-left-color: #f59e0b !important; }
+        .status-expired { border-left-color: #ef4444 !important; }
+
+        .status-tag { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; width: fit-content; margin-bottom: 4px; }
+        .tag-active { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .tag-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .tag-expired { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
         .client-title { font-weight: bold; font-size: 1.1rem; color: #f8fafc; }
         .client-info { font-size: 0.85rem; color: #cbd5e1; }
         .client-actions { display: flex; gap: 8px; margin-top: 8px; }
@@ -50,12 +61,12 @@
         <h1>Mis Clientes</h1>
     </div>
 
-    <!-- Formulario para agregar / editar -->
+    <!-- Formulario -->
     <div class="form-card">
         <h2 id="formTitle">Agregar nuevo cliente</h2>
         <input type="hidden" id="editIndex" value="-1">
         <input type="text" id="inputName" placeholder="Nombre completo *" required>
-        <input type="text" id="inputService" placeholder="Servicio (ej. TV Digital)">
+        <input type="text" id="inputService" placeholder="Servicio (ej. PegazoTv)">
         <input type="date" id="inputDate" placeholder="Fecha Vencimiento">
         <input type="text" id="inputWsp" placeholder="WhatsApp (ej. 549343...)">
         
@@ -84,6 +95,38 @@
 <script>
     let clients = JSON.parse(localStorage.getItem('gu2_full_clients')) || [];
 
+    function getStatus(dateString) {
+        if (!dateString) return { class: '', tagClass: '', text: 'Sin Fecha', type: 'none' };
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const parts = dateString.split('-');
+        const expDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+        const diffTime = expDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            return { class: 'status-expired', tagClass: 'tag-expired', text: '🔴 VENCIDO', type: 'expired' };
+        } else if (diffDays <= 5) {
+            return { class: 'status-warning', tagClass: 'tag-warning', text: '🟡 POR VENCER', type: 'warning' };
+        } else {
+            return { class: 'status-active', tagClass: 'tag-active', text: '🟢 ACTIVO', type: 'active' };
+        }
+    }
+
+    function getWspMessage(c, status) {
+        let baseMsg = `Hola ${c.name}, `;
+        if (status.type === 'expired') {
+            return encodeURIComponent(`${baseMsg}te informo que tu servicio de ${c.service || ''} está VENCIDO desde el ${c.date}. Por favor, contáctame para regularizar.`);
+        } else if (status.type === 'warning') {
+            return encodeURIComponent(`${baseMsg}te informo que tu servicio de ${c.service || ''} está POR VENCER el ${c.date}.`);
+        } else {
+            return encodeURIComponent(`${baseMsg}gracias por usar nuestro servicio de ${c.service || ''}.`);
+        }
+    }
+
     function render() {
         const list = document.getElementById('list');
         const filter = document.getElementById('searchInput').value.toLowerCase();
@@ -91,13 +134,21 @@
 
         clients.forEach((c, index) => {
             if (c.name.toLowerCase().includes(filter)) {
+                const status = getStatus(c.date);
                 const li = document.createElement('li');
-                li.className = 'client-card';
+                li.className = `client-card ${status.class}`;
                 
-                let wspBtn = c.wsp ? `<a href="https://wa.me/${c.wsp.replace(/[^0-9]/g, '')}" target="_blank" class="btn-sm btn-wsp">WhatsApp</a>` : '';
+                let wspBtn = '';
+                if (c.wsp) {
+                    const wspUrl = `https://wa.me/${c.wsp.replace(/[^0-9]/g, '')}?text=${getWspMessage(c, status)}`;
+                    wspBtn = `<a href="${wspUrl}" target="_blank" class="btn-sm btn-wsp">WhatsApp</a>`;
+                }
                 
                 li.innerHTML = `
-                    <div class="client-title">${c.name}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="client-title">${c.name}</div>
+                        <span class="status-tag ${status.tagClass}">${status.text}</span>
+                    </div>
                     <div class="client-info">📺 <b>Servicio:</b> ${c.service || 'N/A'}</div>
                     <div class="client-info">📅 <b>Vence:</b> ${c.date || 'N/A'}</div>
                     <div class="client-actions">
@@ -113,6 +164,8 @@
         localStorage.setItem('gu2_full_clients', JSON.stringify(clients));
     }
 
+    // ... (El resto de funciones saveClient, editClient, etc. siguen igual)
+
     function saveClient() {
         const name = document.getElementById('inputName').value.trim();
         const service = document.getElementById('inputService').value.trim();
@@ -120,21 +173,10 @@
         const wsp = document.getElementById('inputWsp').value.trim();
         const editIndex = parseInt(document.getElementById('editIndex').value);
 
-        if (!name) {
-            alert('Por favor, ingresá al menos el nombre del cliente.');
-            return;
-        }
-
+        if (!name) { alert('Por favor, ingresá el nombre.'); return; }
         const clientData = { name, service, date, wsp };
-
-        if (editIndex === -1) {
-            clients.push(clientData);
-        } else {
-            clients[editIndex] = clientData;
-        }
-
-        resetForm();
-        render();
+        if (editIndex === -1) { clients.push(clientData); } else { clients[editIndex] = clientData; }
+        resetForm(); render();
     }
 
     function editClient(index) {
@@ -144,11 +186,9 @@
         document.getElementById('inputDate').value = c.date || '';
         document.getElementById('inputWsp').value = c.wsp || '';
         document.getElementById('editIndex').value = index;
-
         document.getElementById('formTitle').innerText = 'Editando a: ' + c.name;
         document.getElementById('btnSubmit').innerText = 'Guardar Cambios';
         document.getElementById('btnCancel').style.display = 'block';
-        
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -158,25 +198,18 @@
         document.getElementById('inputDate').value = '';
         document.getElementById('inputWsp').value = '';
         document.getElementById('editIndex').value = '-1';
-
         document.getElementById('formTitle').innerText = 'Agregar nuevo cliente';
         document.getElementById('btnSubmit').innerText = 'Guardar Cliente';
         document.getElementById('btnCancel').style.display = 'none';
     }
 
     function delClient(index) {
-        if (confirm('¿Seguro que querés eliminar a ' + clients[index].name + '?')) {
-            clients.splice(index, 1);
-            render();
-        }
+        if (confirm('¿Eliminar a ' + clients[index].name + '?')) { clients.splice(index, 1); render(); }
     }
 
     function exportData() {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients));
-        const a = document.createElement('a');
-        a.href = dataStr;
-        a.download = "mis_clientes_backup.json";
-        a.click();
+        const a = document.createElement('a'); a.href = dataStr; a.download = "mis_clientes_backup.json"; a.click();
     }
 
     function importData(event) {
@@ -184,12 +217,7 @@
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-            try {
-                clients = JSON.parse(e.target.result);
-                render();
-            } catch(err) {
-                alert('Archivo no válido');
-            }
+            try { clients = JSON.parse(e.target.result); render(); } catch(err) { alert('Archivo no válido'); }
         };
         reader.readAsText(file);
     }
