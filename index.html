@@ -3,36 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Clientes</title>
+    <title>GU2 - Mis Clientes</title>
     <style>
-        * { box-sizing: border-box; }
-        body { background-color: #0f172a; color: white; padding: 15px; font-family: sans-serif; }
-        .box { max-width: 400px; margin: 0 auto; }
-        input[type="text"] { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 16px; }
-        button, .btn-link { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer; color: white; font-size: 16px; text-align: center; }
-        .btn-add { background-color: #0284c7; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #0f172a; color: white; padding: 15px; display: flex; justify-content: center; }
+        .box { width: 100%; max-width: 450px; background: #1e293b; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        
+        .header-container { text-align: center; margin-bottom: 20px; }
+        .app-logo { max-width: 140px; max-height: 90px; margin-bottom: 10px; object-fit: contain; }
+        h1 { font-size: 1.5rem; color: #38bdf8; text-align: center; }
+        
+        .form-card { background: #0f172a; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
+        .form-card h2 { font-size: 1rem; margin-bottom: 10px; color: #94a3b8; }
+        
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 14px; outline: none; }
+        input:focus { border-color: #38bdf8; }
+        
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; transition: 0.2s; }
+        .btn-add { background-color: #0284c7; margin-top: 5px; }
+        .btn-cancel { background-color: #64748b; margin-top: 5px; display: none; }
         .btn-export { background-color: #10b981; }
-        .btn-import { background-color: #475569; display: block; }
-        ul { list-style: none; padding: 0; margin-top: 15px; }
-        li { background: #334155; padding: 12px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; word-break: break-all; }
-        .btn-del { background: #ef4444; width: auto; padding: 6px 12px; font-size: 12px; margin: 0; }
+        .btn-import { background-color: #475569; text-align: center; display: block; }
+        
+        .search-box { margin-bottom: 15px; }
+        .search-box input { background: #0f172a; border-color: #38bdf8; }
+        
+        ul { list-style: none; }
+        .client-card { background: #334155; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; position: relative; }
+        .client-title { font-weight: bold; font-size: 1.1rem; color: #f8fafc; }
+        .client-info { font-size: 0.85rem; color: #cbd5e1; }
+        .client-actions { display: flex; gap: 8px; margin-top: 8px; }
+        
+        .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; flex: 1; text-align: center; text-decoration: none; display: inline-block; border-radius: 6px; }
+        .btn-edit { background: #f59e0b; color: white; }
+        .btn-del { background: #ef4444; color: white; }
+        .btn-wsp { background: #22c55e; color: white; }
+        
         input[type="file"] { display: none; }
     </style>
 </head>
 <body>
+
 <div class="box">
-    <h1>Mis Clientes</h1>
-    
-    <form id="clientForm" onsubmit="add(event)">
-        <input type="text" id="inputName" placeholder="Nombre del cliente..." required autocomplete="off">
-        <button type="submit" class="btn-add">Agregar Cliente</button>
-    </form>
-    
+    <div class="header-container">
+        <img src="logo.png" alt="GU2 Logo" class="app-logo" onerror="this.style.display='none'">
+        <h1>Mis Clientes</h1>
+    </div>
+
+    <!-- Formulario para agregar / editar -->
+    <div class="form-card">
+        <h2 id="formTitle">Agregar nuevo cliente</h2>
+        <input type="hidden" id="editIndex" value="-1">
+        <input type="text" id="inputName" placeholder="Nombre completo *" required>
+        <input type="text" id="inputService" placeholder="Servicio (ej. TV Digital)">
+        <input type="date" id="inputDate" placeholder="Fecha Vencimiento">
+        <input type="text" id="inputWsp" placeholder="WhatsApp (ej. 549343...)">
+        
+        <button type="button" class="btn-add" id="btnSubmit" onclick="saveClient()">Guardar Cliente</button>
+        <button type="button" class="btn-cancel" id="btnCancel" onclick="resetForm()">Cancelar Edición</button>
+    </div>
+
+    <!-- Buscador -->
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar cliente por nombre..." oninput="render()">
+    </div>
+
+    <!-- Lista de clientes -->
     <ul id="list"></ul>
 
-    <div style="margin-top: 25px; border-top: 1px solid #334155; padding-top: 15px;">
+    <!-- Backup -->
+    <div style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
         <button type="button" class="btn-export" onclick="exportData()">Descargar Backup</button>
-        <label class="btn-link btn-import">
+        <label class="btn-import">
             Cargar Backup
             <input type="file" onchange="importData(event)">
         </label>
@@ -40,46 +82,100 @@
 </div>
 
 <script>
-    let clients = [];
-    
-    try {
-        clients = JSON.parse(localStorage.getItem('my_clients')) || [];
-    } catch(e) {
-        clients = [];
-    }
+    let clients = JSON.parse(localStorage.getItem('gu2_full_clients')) || [];
 
     function render() {
         const list = document.getElementById('list');
+        const filter = document.getElementById('searchInput').value.toLowerCase();
         list.innerHTML = '';
-        clients.forEach((c, i) => {
-            list.innerHTML += `<li><span>${c}</span> <button type="button" class="btn-del" onclick="del(${i})">Eliminar</button></li>`;
+
+        clients.forEach((c, index) => {
+            if (c.name.toLowerCase().includes(filter)) {
+                const li = document.createElement('li');
+                li.className = 'client-card';
+                
+                let wspBtn = c.wsp ? `<a href="https://wa.me/${c.wsp.replace(/[^0-9]/g, '')}" target="_blank" class="btn-sm btn-wsp">WhatsApp</a>` : '';
+                
+                li.innerHTML = `
+                    <div class="client-title">${c.name}</div>
+                    <div class="client-info">📺 <b>Servicio:</b> ${c.service || 'N/A'}</div>
+                    <div class="client-info">📅 <b>Vence:</b> ${c.date || 'N/A'}</div>
+                    <div class="client-actions">
+                        ${wspBtn}
+                        <button class="btn-sm btn-edit" onclick="editClient(${index})">Editar</button>
+                        <button class="btn-sm btn-del" onclick="delClient(${index})">Eliminar</button>
+                    </div>
+                `;
+                list.appendChild(li);
+            }
         });
+
+        localStorage.setItem('gu2_full_clients', JSON.stringify(clients));
     }
 
-    function add(e) {
-        if (e) e.preventDefault(); // Evita que la página se recargue
-        const input = document.getElementById('inputName');
-        const val = input.value.trim();
+    function saveClient() {
+        const name = document.getElementById('inputName').value.trim();
+        const service = document.getElementById('inputService').value.trim();
+        const date = document.getElementById('inputDate').value;
+        const wsp = document.getElementById('inputWsp').value.trim();
+        const editIndex = parseInt(document.getElementById('editIndex').value);
+
+        if (!name) {
+            alert('Por favor, ingresá al menos el nombre del cliente.');
+            return;
+        }
+
+        const clientData = { name, service, date, wsp };
+
+        if (editIndex === -1) {
+            clients.push(clientData);
+        } else {
+            clients[editIndex] = clientData;
+        }
+
+        resetForm();
+        render();
+    }
+
+    function editClient(index) {
+        const c = clients[index];
+        document.getElementById('inputName').value = c.name;
+        document.getElementById('inputService').value = c.service || '';
+        document.getElementById('inputDate').value = c.date || '';
+        document.getElementById('inputWsp').value = c.wsp || '';
+        document.getElementById('editIndex').value = index;
+
+        document.getElementById('formTitle').innerText = 'Editando a: ' + c.name;
+        document.getElementById('btnSubmit').innerText = 'Guardar Cambios';
+        document.getElementById('btnCancel').style.display = 'block';
         
-        if (val !== "") {
-            clients.push(val);
-            localStorage.setItem('my_clients', JSON.stringify(clients));
-            input.value = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById('inputName').value = '';
+        document.getElementById('inputService').value = '';
+        document.getElementById('inputDate').value = '';
+        document.getElementById('inputWsp').value = '';
+        document.getElementById('editIndex').value = '-1';
+
+        document.getElementById('formTitle').innerText = 'Agregar nuevo cliente';
+        document.getElementById('btnSubmit').innerText = 'Guardar Cliente';
+        document.getElementById('btnCancel').style.display = 'none';
+    }
+
+    function delClient(index) {
+        if (confirm('¿Seguro que querés eliminar a ' + clients[index].name + '?')) {
+            clients.splice(index, 1);
             render();
         }
-    }
-
-    function del(i) {
-        clients.splice(i, 1);
-        localStorage.setItem('my_clients', JSON.stringify(clients));
-        render();
     }
 
     function exportData() {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients));
         const a = document.createElement('a');
         a.href = dataStr;
-        a.download = "mis_clientes.json";
+        a.download = "mis_clientes_backup.json";
         a.click();
     }
 
@@ -90,10 +186,9 @@
         reader.onload = function(e) {
             try {
                 clients = JSON.parse(e.target.result);
-                localStorage.setItem('my_clients', JSON.stringify(clients));
                 render();
             } catch(err) {
-                alert("Archivo inválido");
+                alert('Archivo no válido');
             }
         };
         reader.readAsText(file);
@@ -101,5 +196,6 @@
 
     render();
 </script>
+
 </body>
 </html>
