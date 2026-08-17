@@ -3,216 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Clientes - GU2</title>
+    <title>App</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            padding: 16px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 400px;
-            background-color: #1e293b;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #38bdf8;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            background-color: #0f172a;
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        input[type="text"]:focus {
-            border-color: #38bdf8;
-        }
-
-        .btn-add {
-            width: 100%;
-            padding: 12px 20px;
-            border-radius: 8px;
-            border: none;
-            background-color: #0284c7;
-            color: white;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        .client-list {
-            list-style: none;
-            margin-top: 10px;
-        }
-
-        .client-item {
-            background-color: #334155;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            word-break: break-all;
-        }
-
-        .delete-btn {
-            background-color: #ef4444;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        .actions {
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .btn-export {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            background-color: #10b981;
-            color: white;
-            font-weight: bold;
-            font-size: 0.95rem;
-            cursor: pointer;
-        }
-
-        .file-label {
-            display: block;
-            text-align: center;
-            background-color: #334155;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
+        body { background: #0f172a; color: white; padding: 20px; font-family: sans-serif; }
+        .box { max-width: 400px; margin: 0 auto; }
+        input { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: none; box-sizing: border-box;}
+        button { width: 100%; padding: 15px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; margin-bottom: 10px; }
+        ul { list-style: none; padding: 0; }
+        li { background: #334155; padding: 10px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
-
-<div class="container">
+<div class="box">
     <h1>Mis Clientes</h1>
-
-    <div class="form-group">
-        <input type="text" id="clientName" placeholder="Nombre del cliente...">
-        <button class="btn-add" onclick="addClient()">Agregar Cliente</button>
-    </div>
-
-    <ul class="client-list" id="clientList"></ul>
-
-    <div class="actions">
-        <button class="btn-export" onclick="exportData()">Descargar (Exportar)</button>
-        <label class="file-label">
-            Cargar Copia de Seguridad
-            <input type="file" onchange="importData(event)">
-        </label>
-    </div>
+    <input type="text" id="inputName" placeholder="Nombre...">
+    <button onclick="testButton()">Agregar Cliente</button>
+    <ul id="list"></ul>
 </div>
-
 <script>
-    let clients = JSON.parse(localStorage.getItem('gu2_clients')) || [];
-
-    function renderClients() {
-        const list = document.getElementById('clientList');
-        list.innerHTML = '';
-        clients.forEach((client, index) => {
-            const li = document.createElement('li');
-            li.className = 'client-item';
-            li.innerHTML = `
-                <span>${client}</span>
-                <button class="delete-btn" onclick="deleteClient(${index})">Eliminar</button>
-            `;
-            list.appendChild(li);
-        });
-        localStorage.setItem('gu2_clients', JSON.stringify(clients));
-    }
-
-    function addClient() {
-        const input = document.getElementById('clientName');
-        const name = input.value.trim();
-        if (name) {
-            clients.push(name);
-            input.value = '';
-            renderClients();
+    function testButton() {
+        alert("¡El botón ha sido presionado!");
+        let input = document.getElementById('inputName');
+        let val = input.value;
+        if(val.trim() === "") {
+            alert("El campo está vacío");
+        } else {
+            alert("Agregando: " + val);
+            // Si esto funciona, después agregamos la lógica de guardar
         }
     }
-
-    function deleteClient(index) {
-        clients.splice(index, 1);
-        renderClients();
-    }
-
-    function exportData() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "clientes_backup.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-    }
-
-    function importData(event) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                clients = JSON.parse(e.target.result);
-                renderClients();
-            } catch(err) {
-                alert('Archivo no válido');
-            }
-        };
-        reader.readAsText(event.target.files[0]);
-    }
-
-    renderClients();
 </script>
-
 </body>
 </html>
