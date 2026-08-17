@@ -9,22 +9,22 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         body {
             background-color: #0f172a;
             color: #f8fafc;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: center;
         }
 
         .container {
             width: 100%;
-            max-width: 480px;
+            max-width: 400px;
             background-color: #1e293b;
-            padding: 24px;
+            padding: 20px;
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
@@ -38,12 +38,13 @@
 
         .form-group {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 20px;
         }
 
         input[type="text"] {
-            flex: 1;
+            width: 100%;
             padding: 12px 16px;
             border-radius: 8px;
             border: 1px solid #334155;
@@ -57,20 +58,16 @@
             border-color: #38bdf8;
         }
 
-        button {
+        .btn-add {
+            width: 100%;
             padding: 12px 20px;
             border-radius: 8px;
             border: none;
             background-color: #0284c7;
             color: white;
             font-weight: bold;
-            font-size: 0.95rem;
+            font-size: 1rem;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        button:active {
-            background-color: #0369a1;
         }
 
         .client-list {
@@ -86,12 +83,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            word-break: break-all;
         }
 
         .delete-btn {
             background-color: #ef4444;
+            color: white;
+            border: none;
             padding: 6px 12px;
+            border-radius: 6px;
             font-size: 0.8rem;
+            cursor: pointer;
+            margin-left: 10px;
         }
 
         .actions {
@@ -103,14 +106,27 @@
             gap: 10px;
         }
 
+        .btn-export {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background-color: #10b981;
+            color: white;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
         .file-label {
             display: block;
             text-align: center;
             background-color: #334155;
-            padding: 10px;
+            color: white;
+            padding: 12px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
 
         input[type="file"] {
@@ -125,13 +141,13 @@
 
     <div class="form-group">
         <input type="text" id="clientName" placeholder="Nombre del cliente...">
-        <button onclick="addClient()">Agregar</button>
+        <button class="btn-add" onclick="addClient()">Agregar Cliente</button>
     </div>
 
     <ul class="client-list" id="clientList"></ul>
 
     <div class="actions">
-        <button onclick="exportData()" style="background-color: #10b981;">Descargar (Exportar)</button>
+        <button class="btn-export" onclick="exportData()">Descargar (Exportar)</button>
         <label class="file-label">
             Cargar Copia de Seguridad
             <input type="file" onchange="importData(event)">
@@ -185,8 +201,12 @@
     function importData(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            clients = JSON.parse(e.target.result);
-            renderClients();
+            try {
+                clients = JSON.parse(e.target.result);
+                renderClients();
+            } catch(err) {
+                alert('Archivo no válido');
+            }
         };
         reader.readAsText(event.target.files[0]);
     }
