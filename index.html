@@ -3,35 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App</title>
+    <title>Mis Clientes</title>
     <style>
         body { background: #0f172a; color: white; padding: 20px; font-family: sans-serif; }
         .box { max-width: 400px; margin: 0 auto; }
         input { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: none; box-sizing: border-box;}
         button { width: 100%; padding: 15px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; margin-bottom: 10px; }
         ul { list-style: none; padding: 0; }
-        li { background: #334155; padding: 10px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; }
+        li { background: #334155; padding: 10px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;}
     </style>
 </head>
 <body>
 <div class="box">
     <h1>Mis Clientes</h1>
-    <input type="text" id="inputName" placeholder="Nombre...">
-    <button onclick="testButton()">Agregar Cliente</button>
+    <input type="text" id="inputName" placeholder="Nombre del cliente...">
+    <button onclick="add()">Agregar Cliente</button>
     <ul id="list"></ul>
 </div>
+
 <script>
-    function testButton() {
-        alert("¡El botón ha sido presionado!");
+    // Cargar datos guardados al abrir
+    let clients = JSON.parse(localStorage.getItem('my_clients')) || [];
+
+    function render() {
+        let list = document.getElementById('list');
+        list.innerHTML = '';
+        clients.forEach((c, i) => {
+            list.innerHTML += `<li>${c} <button onclick="del(${i})" style="background:red; width:auto; padding:5px; margin:0;">X</button></li>`;
+        });
+    }
+
+    function add() {
         let input = document.getElementById('inputName');
-        let val = input.value;
-        if(val.trim() === "") {
-            alert("El campo está vacío");
-        } else {
-            alert("Agregando: " + val);
-            // Si esto funciona, después agregamos la lógica de guardar
+        if(input.value.trim() !== "") {
+            clients.push(input.value);
+            localStorage.setItem('my_clients', JSON.stringify(clients));
+            input.value = '';
+            render();
         }
     }
+
+    function del(i) {
+        clients.splice(i, 1);
+        localStorage.setItem('my_clients', JSON.stringify(clients));
+        render();
+    }
+
+    render(); // Dibujar la lista al cargar
 </script>
 </body>
 </html>
