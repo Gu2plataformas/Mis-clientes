@@ -5,31 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Clientes</title>
     <style>
-        body { background: #0f172a; color: white; padding: 20px; font-family: sans-serif; }
+        body { background-color: #0f172a; color: white; padding: 15px; font-family: sans-serif; }
         .box { max-width: 400px; margin: 0 auto; }
-        input { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: none; box-sizing: border-box;}
-        button { width: 100%; padding: 15px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; margin-bottom: 10px; }
+        input[type="text"] { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: none; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer; color: white; }
+        .btn-add { background-color: #0284c7; }
+        .btn-export { background-color: #10b981; }
+        .btn-import { background-color: #64748b; text-align: center; display: block; }
         ul { list-style: none; padding: 0; }
-        li { background: #334155; padding: 10px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;}
+        li { background: #334155; padding: 10px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        input[type="file"] { display: none; }
     </style>
 </head>
 <body>
 <div class="box">
     <h1>Mis Clientes</h1>
     <input type="text" id="inputName" placeholder="Nombre del cliente...">
-    <button onclick="add()">Agregar Cliente</button>
+    <button class="btn-add" onclick="add()">Agregar Cliente</button>
+    
     <ul id="list"></ul>
+
+    <div style="margin-top: 20px;">
+        <button class="btn-export" onclick="exportData()">Descargar Backup</button>
+        <label class="btn-import">
+            Cargar Backup
+            <input type="file" onchange="importData(event)">
+        </label>
+    </div>
 </div>
 
 <script>
-    // Cargar datos guardados al abrir
     let clients = JSON.parse(localStorage.getItem('my_clients')) || [];
 
     function render() {
         let list = document.getElementById('list');
         list.innerHTML = '';
         clients.forEach((c, i) => {
-            list.innerHTML += `<li>${c} <button onclick="del(${i})" style="background:red; width:auto; padding:5px; margin:0;">X</button></li>`;
+            list.innerHTML += `<li>${c} <button onclick="del(${i})" style="background:red; width:auto; padding:5px; margin:0; font-size:12px;">Eliminar</button></li>`;
         });
     }
 
@@ -49,7 +61,26 @@
         render();
     }
 
-    render(); // Dibujar la lista al cargar
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients));
+        const a = document.createElement('a');
+        a.href = dataStr;
+        a.download = "mis_clientes.json";
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            clients = JSON.parse(e.target.result);
+            localStorage.setItem('my_clients', JSON.stringify(clients));
+            render();
+        };
+        reader.readAsText(file);
+    }
+
+    render();
 </script>
 </body>
 </html>
