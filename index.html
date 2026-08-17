@@ -27,11 +27,11 @@
         
         .search-box { margin-bottom: 15px; }
         .search-box input { background: #0f172a; border-color: #38bdf8; }
+        .counter-box { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: -5px; margin-bottom: 15px; }
         
         ul { list-style: none; }
         .client-card { background: #334155; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; position: relative; border-left: 6px solid #94a3b8; }
         
-        /* Colores de estado */
         .status-active { border-left-color: #22c55e !important; }
         .status-warning { border-left-color: #f59e0b !important; }
         .status-expired { border-left-color: #ef4444 !important; }
@@ -61,7 +61,6 @@
         <h1>Mis Clientes</h1>
     </div>
 
-    <!-- Formulario -->
     <div class="form-card">
         <h2 id="formTitle">Agregar nuevo cliente</h2>
         <input type="hidden" id="editIndex" value="-1">
@@ -74,15 +73,13 @@
         <button type="button" class="btn-cancel" id="btnCancel" onclick="resetForm()">Cancelar Edición</button>
     </div>
 
-    <!-- Buscador -->
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="🔍 Buscar cliente por nombre..." oninput="render()">
+        <div id="counter" class="counter-box"></div>
     </div>
 
-    <!-- Lista de clientes -->
     <ul id="list"></ul>
 
-    <!-- Backup -->
     <div style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
         <button type="button" class="btn-export" onclick="exportData()">Descargar Backup</button>
         <label class="btn-import">
@@ -97,43 +94,42 @@
 
     function getStatus(dateString) {
         if (!dateString) return { class: '', tagClass: '', text: 'Sin Fecha', type: 'none' };
-        
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
         const parts = dateString.split('-');
         const expDate = new Date(parts[0], parts[1] - 1, parts[2]);
-
         const diffTime = expDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays < 0) {
-            return { class: 'status-expired', tagClass: 'tag-expired', text: '🔴 VENCIDO', type: 'expired' };
-        } else if (diffDays <= 5) {
-            return { class: 'status-warning', tagClass: 'tag-warning', text: '🟡 POR VENCER', type: 'warning' };
-        } else {
-            return { class: 'status-active', tagClass: 'tag-active', text: '🟢 ACTIVO', type: 'active' };
-        }
+        if (diffDays < 0) return { class: 'status-expired', tagClass: 'tag-expired', text: '🔴 VENCIDO', type: 'expired' };
+        if (diffDays <= 5) return { class: 'status-warning', tagClass: 'tag-warning', text: '🟡 POR VENCER', type: 'warning' };
+        return { class: 'status-active', tagClass: 'tag-active', text: '🟢 ACTIVO', type: 'active' };
     }
 
     function getWspMessage(c, status) {
         let baseMsg = `Hola ${c.name}, `;
-        if (status.type === 'expired') {
-            return encodeURIComponent(`${baseMsg}te informo que tu servicio de ${c.service || ''} está VENCIDO desde el ${c.date}. Por favor, contáctame para regularizar.`);
-        } else if (status.type === 'warning') {
-            return encodeURIComponent(`${baseMsg}te informo que tu servicio de ${c.service || ''} está POR VENCER el ${c.date}.`);
-        } else {
-            return encodeURIComponent(`${baseMsg}gracias por usar nuestro servicio de ${c.service || ''}.`);
-        }
+        if (status.type === 'expired') return encodeURIComponent(`${baseMsg}te informo que tu servicio de ${c.service || ''} está VENCIDO desde el ${c.date}. Por favor, contáctame para regularizar.`);
+        if (status.type === 'warning') return encodeURIComponent(`${baseMsg}te informo que tu servicio de ${c.service || ''} está POR VENCER el ${c.date}.`);
+        return encodeURIComponent(`${baseMsg}gracias por usar nuestro servicio de ${c.service || ''}.`);
     }
 
     function render() {
         const list = document.getElementById('list');
+        const counter = document.getElementById('counter');
         const filter = document.getElementById('searchInput').value.toLowerCase();
-        list.innerHTML = '';
+        
+        const sortedClients = [...clients].sort((a, b) => {
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+            return new Date(a.date) - new Date(b.date);
+        });
 
-        clients.forEach((c, index) => {
+        list.innerHTML = '';
+        let visibleCount = 0;
+
+        sortedClients.forEach((c) => {
             if (c.name.toLowerCase().includes(filter)) {
+                visibleCount++;
+                const originalIndex = clients.indexOf(c);
                 const status = getStatus(c.date);
                 const li = document.createElement('li');
                 li.className = `client-card ${status.class}`;
@@ -153,18 +149,17 @@
                     <div class="client-info">📅 <b>Vence:</b> ${c.date || 'N/A'}</div>
                     <div class="client-actions">
                         ${wspBtn}
-                        <button class="btn-sm btn-edit" onclick="editClient(${index})">Editar</button>
-                        <button class="btn-sm btn-del" onclick="delClient(${index})">Eliminar</button>
+                        <button class="btn-sm btn-edit" onclick="editClient(${originalIndex})">Editar</button>
+                        <button class="btn-sm btn-del" onclick="delClient(${originalIndex})">Eliminar</button>
                     </div>
                 `;
                 list.appendChild(li);
             }
         });
-
+        
+        counter.innerText = `Total de clientes: ${clients.length}`;
         localStorage.setItem('gu2_full_clients', JSON.stringify(clients));
     }
-
-    // ... (El resto de funciones saveClient, editClient, etc. siguen igual)
 
     function saveClient() {
         const name = document.getElementById('inputName').value.trim();
@@ -172,7 +167,6 @@
         const date = document.getElementById('inputDate').value;
         const wsp = document.getElementById('inputWsp').value.trim();
         const editIndex = parseInt(document.getElementById('editIndex').value);
-
         if (!name) { alert('Por favor, ingresá el nombre.'); return; }
         const clientData = { name, service, date, wsp };
         if (editIndex === -1) { clients.push(clientData); } else { clients[editIndex] = clientData; }
@@ -224,6 +218,5 @@
 
     render();
 </script>
-
 </body>
 </html>
