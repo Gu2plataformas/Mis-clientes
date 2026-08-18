@@ -43,9 +43,10 @@
 
         .client-title { font-weight: bold; font-size: 1.1rem; color: #f8fafc; }
         .client-info { font-size: 0.85rem; color: #cbd5e1; }
-        .client-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .client-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
         
-        .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; flex: 1; text-align: center; text-decoration: none; display: inline-block; border-radius: 6px; }
+        .btn-sm { width: auto; padding: 6px 10px; font-size: 12px; flex: 1; text-align: center; text-decoration: none; display: inline-block; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-renew { background: #0284c7; color: white; }
         .btn-edit { background: #f59e0b; color: white; }
         .btn-del { background: #ef4444; color: white; }
         .btn-wsp { background: #22c55e; color: white; }
@@ -85,7 +86,7 @@
         <button type="button" class="btn-export" onclick="exportData()">Descargar Backup</button>
         <label class="btn-import">
             Cargar Backup
-            <input type="file" onchange="importData(event)">
+            <input type="file" id="fileInput" onchange="importData(event)">
         </label>
     </div>
 </div>
@@ -118,6 +119,30 @@
         if (status.type === 'expired') return encodeURIComponent(`${baseMsg}te informo que tu servicio de ${c.service || ''} está VENCIDO desde el ${c.date}. Por favor, contáctame para regularizar.`);
         if (status.type === 'warning') return encodeURIComponent(`${baseMsg}te informo que tu servicio de ${c.service || ''} está POR VENCER el ${c.date}.`);
         return encodeURIComponent(`${baseMsg}gracias por usar nuestro servicio de ${c.service || ''}.`);
+    }
+
+    function renewClient(index) {
+        const c = clients[index];
+        let baseDate;
+        
+        if (c.date) {
+            const parts = c.date.split('-');
+            baseDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (baseDate < today) baseDate = today;
+        } else {
+            baseDate = new Date();
+        }
+
+        baseDate.setDate(baseDate.getDate() + 30);
+        
+        const year = baseDate.getFullYear();
+        const month = String(baseDate.getMonth() + 1).padStart(2, '0');
+        const day = String(baseDate.getDate()).padStart(2, '0');
+        
+        c.date = `${year}-${month}-${day}`;
+        render();
     }
 
     function render() {
@@ -160,6 +185,7 @@
                     <div class="client-info">📺 <b>Servicio:</b> ${c.service || 'N/A'}</div>
                     <div class="client-info">📅 <b>Vence:</b> ${c.date || 'N/A'}</div>
                     <div class="client-actions">
+                        <button class="btn-sm btn-renew" onclick="renewClient(${originalIndex})">➕ 30d</button>
                         ${wspBtn}
                         <button class="btn-sm btn-edit" onclick="editClient(${originalIndex})">Editar</button>
                         <button class="btn-sm btn-del" onclick="delClient(${originalIndex})">Eliminar</button>
@@ -219,7 +245,7 @@
     }
 
     function exportData() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients));
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients, null, 2));
         const a = document.createElement('a'); a.href = dataStr; a.download = "mis_clientes_backup.json"; a.click();
     }
 
@@ -228,7 +254,21 @@
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-            try { clients = JSON.parse(e.target.result); render(); } catch(err) { alert('Archivo no válido'); }
+            try { 
+                let rawText = e.target.result.trim();
+                if (rawText.charCodeAt(0) === 0xFEFF) { rawText = rawText.substr(1); } // Limpia caracteres invisibles BOM
+                const parsedData = JSON.parse(rawText);
+                if (Array.isArray(parsedData)) {
+                    clients = parsedData;
+                    render();
+                    alert('¡' + clients.length + ' clientes cargados con éxito!');
+                } else {
+                    alert('El archivo no contiene una lista válida de clientes.');
+                }
+            } catch(err) { 
+                alert('Archivo no válido. Asegurate de seleccionar un archivo .json correcto.'); 
+            }
+            document.getElementById('fileInput').value = '';
         };
         reader.readAsText(file);
     }
