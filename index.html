@@ -55,7 +55,7 @@
         .btn-descargar { background-color: #00b029; }
         .btn-cargar { background-color: #ff9900; display: block; text-align: center; }
 
-        /* Formulario y Tarjetas con ajuste para Teclado Móvil (16px) */
+        /* Formulario y Ajustes de Teclado Táctil */
         .form-card { background: #0f172a; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
         .form-card h2 { font-size: 1rem; margin-bottom: 10px; color: #94a3b8; }
         
@@ -67,9 +67,9 @@
             border: 1px solid #334155; 
             background: #1e293b; 
             color: white; 
-            font-size: 16px; /* Evita que el celular haga zoom y bloquee el teclado */
+            font-size: 16px !important; /* Fuerza 16px para evitar bloqueo de zoom */
             outline: none; 
-            -webkit-appearance: none;
+            touch-action: manipulation; /* Desbloquea la respuesta táctil en móviles */
         }
         input:focus { border-color: #38bdf8; }
         
@@ -78,7 +78,7 @@
         .btn-cancel { background-color: #64748b; margin-top: 5px; display: none; }
         
         .search-box { margin-bottom: 15px; }
-        .search-box input { background: #0f172a; border-color: #38bdf8; font-size: 16px; }
+        .search-box input { background: #0f172a; border-color: #38bdf8; font-size: 16px !important; }
         .counter-box { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: -5px; margin-bottom: 15px; }
         
         ul { list-style: none; }
@@ -128,11 +128,11 @@
     <div class="form-card">
         <h2 id="formTitle">Agregar nuevo cliente</h2>
         <input type="hidden" id="editIndex" value="-1">
-        <input type="text" id="inputName" placeholder="Nombre completo *" required autocomplete="off">
-        <input type="text" id="inputUser" placeholder="Usuario" autocomplete="off">
-        <input type="text" id="inputService" placeholder="Servicio (ej. Premium)" autocomplete="off">
+        <input type="text" id="inputName" placeholder="Nombre completo *" required autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+        <input type="text" id="inputUser" placeholder="Usuario" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+        <input type="text" id="inputService" placeholder="Servicio (ej. Premium)" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
         <input type="date" id="inputDate" placeholder="Fecha Vencimiento">
-        <input type="tel" id="inputWsp" placeholder="WhatsApp (ej. 549343...)" inputmode="numeric" autocomplete="off">
+        <input type="tel" id="inputWsp" placeholder="WhatsApp (ej. 549343...)" inputmode="numeric" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
         
         <button type="button" class="btn-add" id="btnSubmit" onclick="saveClient()">Guardar Cliente</button>
         <button type="button" class="btn-cancel" id="btnCancel" onclick="resetForm()">Cancelar Edición</button>
@@ -140,7 +140,7 @@
 
     <!-- Búsqueda y Contador -->
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 Buscar cliente por nombre o usuario..." oninput="render()" autocomplete="off">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar cliente por nombre o usuario..." oninput="render()" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
         <div id="counter" class="counter-box"></div>
     </div>
 
@@ -149,7 +149,6 @@
 </div>
 
 <script>
-    // Inicialización limpia desde cero
     const initialClients = [];
 
     let stored = localStorage.getItem('gu2_full_clients');
