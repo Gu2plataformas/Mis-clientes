@@ -9,10 +9,53 @@
         body { background-color: #0f172a; color: white; padding: 15px; display: flex; justify-content: center; }
         .box { width: 100%; max-width: 450px; background: #1e293b; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
         
-        .header-container { text-align: center; margin-bottom: 20px; }
-        .app-logo { max-width: 140px; max-height: 90px; margin-bottom: 10px; object-fit: contain; }
-        h1 { font-size: 1.5rem; color: #38bdf8; text-align: center; }
-        
+        /* Encabezado Nuevo Estilo Diseño */
+        .header-container { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            margin-bottom: 20px; 
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0284c7;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        .app-logo { 
+            max-width: 150px; 
+            max-height: 70px; 
+            object-fit: contain; 
+        }
+        h1 { 
+            font-size: 1.8rem; 
+            color: #ffffff; 
+            font-weight: 800;
+        }
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .btn-top-backup {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .btn-top-backup:active { transform: scale(0.95); }
+        .btn-descargar { background-color: #00b029; }
+        .btn-cargar { background-color: #ff9900; display: block; text-align: center; }
+
+        /* Formulario y Tarjetas */
         .form-card { background: #0f172a; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
         .form-card h2 { font-size: 1rem; margin-bottom: 10px; color: #94a3b8; }
         
@@ -22,8 +65,6 @@
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; transition: 0.2s; }
         .btn-add { background-color: #0284c7; margin-top: 5px; }
         .btn-cancel { background-color: #64748b; margin-top: 5px; display: none; }
-        .btn-export { background-color: #10b981; }
-        .btn-import { background-color: #475569; text-align: center; display: block; }
         
         .search-box { margin-bottom: 15px; }
         .search-box input { background: #0f172a; border-color: #38bdf8; }
@@ -57,11 +98,22 @@
 <body>
 
 <div class="box">
+    <!-- Encabezado con Logo, Título y Botones de Backup arriba -->
     <div class="header-container">
-        <img src="tv%20digital.png" alt="GU2 Logo" class="app-logo" onerror="this.style.display='none'">
-        <h1>Mis Clientes</h1>
+        <div class="header-left">
+            <img src="LogoTvDigital1.png" alt="TV Digital Logo" class="app-logo">
+            <h1>Mis Clientes</h1>
+        </div>
+        <div class="header-right">
+            <button type="button" class="btn-top-backup btn-descargar" onclick="exportData()">Descargar Backup</button>
+            <label class="btn-top-backup btn-cargar">
+                Cargar Backup
+                <input type="file" id="fileInput" onchange="importData(event)">
+            </label>
+        </div>
     </div>
 
+    <!-- Formulario Agregar / Editar Cliente -->
     <div class="form-card">
         <h2 id="formTitle">Agregar nuevo cliente</h2>
         <input type="hidden" id="editIndex" value="-1">
@@ -75,20 +127,14 @@
         <button type="button" class="btn-cancel" id="btnCancel" onclick="resetForm()">Cancelar Edición</button>
     </div>
 
+    <!-- Búsqueda y Contador -->
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="🔍 Buscar cliente por nombre o usuario..." oninput="render()">
         <div id="counter" class="counter-box"></div>
     </div>
 
+    <!-- Lista de Clientes -->
     <ul id="list"></ul>
-
-    <div style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <button type="button" class="btn-export" onclick="exportData()">Descargar Backup</button>
-        <label class="btn-import">
-            Cargar Backup
-            <input type="file" id="fileInput" onchange="importData(event)">
-        </label>
-    </div>
 </div>
 
 <script>
