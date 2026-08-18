@@ -57,7 +57,7 @@
 
 <div class="box">
     <div class="header-container">
-        <img src="tv digital.png" alt="GU2 Logo" class="app-logo" onerror="this.style.display='none'">
+        <img src="tv%20digital.png" alt="GU2 Logo" class="app-logo" onerror="this.style.display='none'">
         <h1>Mis Clientes</h1>
     </div>
 
@@ -65,7 +65,8 @@
         <h2 id="formTitle">Agregar nuevo cliente</h2>
         <input type="hidden" id="editIndex" value="-1">
         <input type="text" id="inputName" placeholder="Nombre completo *" required>
-        <input type="text" id="inputService" placeholder="Servicio (ej. PegazoTv)">
+        <input type="text" id="inputUser" placeholder="Usuario">
+        <input type="text" id="inputService" placeholder="Servicio (ej. Premium)">
         <input type="date" id="inputDate" placeholder="Fecha Vencimiento">
         <input type="text" id="inputWsp" placeholder="WhatsApp (ej. 549343...)">
         
@@ -74,7 +75,7 @@
     </div>
 
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 Buscar cliente por nombre..." oninput="render()">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar cliente por nombre o usuario..." oninput="render()">
         <div id="counter" class="counter-box"></div>
     </div>
 
@@ -90,7 +91,14 @@
 </div>
 
 <script>
-    let clients = JSON.parse(localStorage.getItem('gu2_full_clients')) || [];
+    const initialClients = [
+        { name: "Abril(novia Didier)", user: "Abril397@u2.com", service: "Premium (3 disp)", date: "2026-08-22", wsp: "" },
+        { name: "Agustín", user: "agustin397@u2.com", service: "Premium (3 disp)", date: "2026-09-16", wsp: "" },
+        { name: "Agustín(AMI Fernando/jorge)", user: "agustin@u2.com", service: "Premium (3 disp)", date: "2026-09-17", wsp: "" }
+    ];
+
+    let stored = localStorage.getItem('gu2_full_clients');
+    let clients = stored ? JSON.parse(stored) : initialClients;
 
     function getStatus(dateString) {
         if (!dateString) return { class: '', tagClass: '', text: 'Sin Fecha', type: 'none' };
@@ -124,11 +132,12 @@
         });
 
         list.innerHTML = '';
-        let visibleCount = 0;
 
         sortedClients.forEach((c) => {
-            if (c.name.toLowerCase().includes(filter)) {
-                visibleCount++;
+            const matchesName = c.name && c.name.toLowerCase().includes(filter);
+            const matchesUser = c.user && c.user.toLowerCase().includes(filter);
+
+            if (matchesName || matchesUser) {
                 const originalIndex = clients.indexOf(c);
                 const status = getStatus(c.date);
                 const li = document.createElement('li');
@@ -140,11 +149,14 @@
                     wspBtn = `<a href="${wspUrl}" target="_blank" class="btn-sm btn-wsp">WhatsApp</a>`;
                 }
                 
+                let userHtml = c.user ? `<div class="client-info">👤 <b>Usuario:</b> ${c.user}</div>` : '';
+
                 li.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div class="client-title">${c.name}</div>
                         <span class="status-tag ${status.tagClass}">${status.text}</span>
                     </div>
+                    ${userHtml}
                     <div class="client-info">📺 <b>Servicio:</b> ${c.service || 'N/A'}</div>
                     <div class="client-info">📅 <b>Vence:</b> ${c.date || 'N/A'}</div>
                     <div class="client-actions">
@@ -163,12 +175,15 @@
 
     function saveClient() {
         const name = document.getElementById('inputName').value.trim();
+        const user = document.getElementById('inputUser').value.trim();
         const service = document.getElementById('inputService').value.trim();
         const date = document.getElementById('inputDate').value;
         const wsp = document.getElementById('inputWsp').value.trim();
         const editIndex = parseInt(document.getElementById('editIndex').value);
+        
         if (!name) { alert('Por favor, ingresá el nombre.'); return; }
-        const clientData = { name, service, date, wsp };
+        
+        const clientData = { name, user, service, date, wsp };
         if (editIndex === -1) { clients.push(clientData); } else { clients[editIndex] = clientData; }
         resetForm(); render();
     }
@@ -176,6 +191,7 @@
     function editClient(index) {
         const c = clients[index];
         document.getElementById('inputName').value = c.name;
+        document.getElementById('inputUser').value = c.user || '';
         document.getElementById('inputService').value = c.service || '';
         document.getElementById('inputDate').value = c.date || '';
         document.getElementById('inputWsp').value = c.wsp || '';
@@ -188,6 +204,7 @@
 
     function resetForm() {
         document.getElementById('inputName').value = '';
+        document.getElementById('inputUser').value = '';
         document.getElementById('inputService').value = '';
         document.getElementById('inputDate').value = '';
         document.getElementById('inputWsp').value = '';
